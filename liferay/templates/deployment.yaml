@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "liferay.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "liferay.name" . }}
+    helm.sh/chart: {{ include "liferay.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "liferay.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "liferay.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      initContainers:
+        - name: init-mariadb
+          image: naqoda/mysql-client
+          command: ['sh', '-c', 'until mysql --host=liferay-mariadb --user=root --password=root --database=lportal --execute="show tables;"; do echo waiting for liferay-mariadb; sleep 2; done;']
+        - name: init-elasticsearch
+          image: busybox
+          command: ['sh', '-c', 'until wget "http://lr-cluster-elasticsearch:9200/_cluster/state?pretty"; do echo waiting for elasticsearch; sleep 2; done;']
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: LIFERAY_DL_PERIOD_STORE_PERIOD_IMPL
+              value: com.liferay.portal.store.file.system.AdvancedFileSystemStore
+          {{- if .Values.liferay.cluster.enabled }}
+            - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_ENABLED
+              value: "true"
+            - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_CHANNEL_PERIOD_LOGIC_PERIOD_NAME_PERIOD_CONTROL
+              value: tcp.xml
+            - name: LIFERAY_CLUSTER_PERIOD_LINK_PERIOD_CHANNEL_PERIOD_LOGIC_PERIOD_NAME_PERIOD_TRANSPORT_PERIOD__NUMBER0_
+              value: tcp.xml                                           
+          {{- end }}
+          {{- if .Values.mariadb.enabled }}
+            - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME
+              value: org.mariadb.jdbc.Driver
+            - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME
+              value: {{ .Values.mariadb.db.user | quote }}
+            - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD
+              value: {{ .Values.mariadb.db.password | quote }}
+            - name: LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL
+              value: jdbc:mariadb://{{ template "mariadb.fullname" . }}:3306/lportal?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false             
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          {{- if .Values.probes.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: liferay-data
+            mountPath: /opt/liferay/document-library
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+      - name: liferay-data
+        persistentVolumeClaim:
+          claimName: liferay-data-vol

@@ -1,0 +1,135 @@
+# Default values for liferay.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: lr-dxp-k8es
+  tag: 1.0.8
+  pullPolicy: Never
+
+liferay:
+  nameOverride: "liferay"
+  fullnameOverride: "liferay-service"
+  cluster:
+    enabled: true
+  persistence:
+    enabled: true
+    ## liferay data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    accessMode: ReadWriteOnce
+    size: 8Gi
+    pvcName: liferay-data-vol  
+port: 8080
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+probes:
+  enabled: false
+
+ingress:
+  enabled: true
+  name: nginx-ingress-srv
+  annotations: {
+    kubernetes.io/ingress.class: nginx,
+    nginx.ingress.kubernetes.io/affinity: "cookie",
+    nginx.ingress.kubernetes.io/session-cookie-name: "JSESSIONID",
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800",
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800",
+  }
+
+    # kubernetes.io/tls-acme: "true"
+  paths: [/]
+  hosts:
+    - lr-kubernetes.com
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #cpu: 1
+  #memory: 4Gi
+
+tolerations: []
+
+affinity: {}
+
+##
+## MariaDB chart configuration
+##
+## https://github.com/helm/charts/blob/master/stable/mariadb/values.yaml
+##
+mariadb:
+  ## Whether to deploy a mariadb server to satisfy the applications database requirements. To use an external database set this to false and configure the externalDatabase parameters
+  enabled: true
+  rootUser:
+    password: root
+  ## Disable MariaDB replication
+  replication:
+    enabled: false
+
+  ## Create a database and a database user
+  ## ref: https://github.com/bitnami/bitnami-docker-mariadb/blob/master/README.md#creating-a-database-user-on-first-run
+  ##
+  db:
+    name: lportal
+    user: liferay
+    ## If the password is not specified, mariadb will generates a random password
+    ##
+    password: liferay
+  ## MariaDB admin password
+  ## ref: https://github.com/bitnami/bitnami-docker-mariadb/blob/master/README.md#setting-the-root-password-on-first-run
+  ##
+    #rootUser: root
+    #  password: root
+
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  master:
+    persistence:
+      enabled: true
+      ## mariadb data Persistent Volume Storage Class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is
+      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+      ##   GKE, AWS & OpenStack)
+      ##
+      # storageClass: "-"
+      accessMode: ReadWriteOnce
+      size: 8Gi
+    livenessProbe:
+      enabled: true
+      ##
+      ## Initializing the database could take some time
+      initialDelaySeconds: 10
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 10
+
+elasticsearch:
+  enabled: true
+  clusterName: lr-cluster
+  nodeGroup: elasticsearch
+  replicas: 1
+  minimumMasterNodes: 1
+  masterService: lr-cluster-elasticsearch
+  #networkHost: lr-cluster-elasticsearch
+

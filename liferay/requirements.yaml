@@ -1,0 +1,13 @@
+dependencies:
+- name: mariadb
+  version: 5.x.x
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: mariadb.enabled
+  tags:
+    - liferay-database
+- name: elasticsearch
+  version: 6.5.2-alpha1
+  repository: https://helm.elastic.co
+  condition: elasticsearch.enabled
+  tags:
+    - liferay-elasticsearch
