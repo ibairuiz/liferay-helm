@@ -1,7 +1,7 @@
-@ECHO OFF
 minikube start --vm-driver hyperv --hyperv-virtual-switch "KubeSwitch"
 helm init
-gitbash (en dir kubernetes)--> eval $(minikube docker-env)
+gitbash (root dir)--> eval $(minikube docker-env)
 gitbash --> docker build --rm -f "docker-image\Dockerfile" -t lr-dxp-k8es:1.0.X docker-image
-helm install stable/nginx-ingress --name liferay-nginx-ingress-controller
+To install nginx-ingress-controller --> helm install stable/nginx-ingress --name liferay-nginx-ingress-controller
+minikube dashboard
 helm install --debug ./liferay --name liferay

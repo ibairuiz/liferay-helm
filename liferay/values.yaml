@@ -10,8 +10,9 @@ image:
   pullPolicy: Never
 
 liferay:
+  serviceName: "liferay-service"
   nameOverride: "liferay"
-  fullnameOverride: "liferay-service"
+  fullnameOverride: "liferay-deployment"
   cluster:
     enabled: true
   persistence:
@@ -31,9 +32,9 @@ port: 8080
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8080
   targetPort: 8080
-
+  name: "liferay-service"
 probes:
   enabled: false
 
@@ -41,7 +42,7 @@ ingress:
   enabled: true
   name: nginx-ingress-srv
   annotations: {
-    kubernetes.io/ingress.class: nginx,
+    kubernetes.io/ingress.class: "nginx",
     nginx.ingress.kubernetes.io/affinity: "cookie",
     nginx.ingress.kubernetes.io/session-cookie-name: "JSESSIONID",
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800",
@@ -51,7 +52,7 @@ ingress:
     # kubernetes.io/tls-acme: "true"
   paths: [/]
   hosts:
-    - lr-kubernetes.com
+    - lr-kubernetes.whatever.local
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

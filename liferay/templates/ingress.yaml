@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "liferay.fullname" . -}}
+{{- $serviceName := .Values.liferay.serviceName -}}
 {{- $ingressPaths := .Values.ingress.paths -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -33,7 +33,7 @@ spec:
 	{{- range $ingressPaths }}
           - path: {{ . }}
             backend:
-              serviceName: {{ $fullName }}
+              serviceName: {{ $serviceName }}
               servicePort: http
 	{{- end }}
   {{- end }}
