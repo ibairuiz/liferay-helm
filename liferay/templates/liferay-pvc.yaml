@@ -8,11 +8,11 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
-    volume.beta.kubernetes.io/storage-class: "nfs"
+    volume.beta.kubernetes.io/storage-class: "nfs-client"
 spec:
   accessModes:
     - ReadWriteMany
   resources:
     requests:
       storage: 8Gi
-  storageClassName: "nfs"
+  storageClassName: "nfs-client"
