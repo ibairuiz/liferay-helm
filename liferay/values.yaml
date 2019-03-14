@@ -5,7 +5,7 @@
 replicaCount: 2
 
 image:
-  repository: lr-dxp-k8es
+  repository: gcr.io/steady-monitor-207105/lr-dxp-k8es
   tag: 1.0.8
   pullPolicy: Never
 
