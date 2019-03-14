@@ -1,9 +1,9 @@
 #!/bin/bash
-gcloud beta filestore instances create nfs --location=eu-west1-b --tier=STANDARD \
-  --file-share=name="vol1",capacity=1TB \
-  --network=name="default",reserved-ip-range="10.0.0.0/29"
-gcloud beta filestore instances list --> NOTE IP
-helm repo add rimusz https://helm-charts.rimusz.net
-helm repo up
-helm install --name nfs-eu-west1-b rimusz/nfs-client-provisioner --namespace nfs-storage \
-  --set nfs.server="IP-HERE" --dry-run --debug
+#https://cloud.google.com/community/tutorials/gke-filestore-dynamic-provisioning
+
+FS="nfs-filestore"
+PROJECT=$(gcloud config get-value project -q)
+ZONE="eu-west1-b"
+gcloud beta filestore instances create ${FS} --project=${PROJECT} --location=${ZONE} --tier=STANDARD --file-share=name="volumes",capacity=1TB --network=name="default",reserved-ip-range="10.0.0.0/29"
+#FSADDR=$(gcloud beta filestore instances describe ${FS} --project=${PROJECT} --location=${ZONE} --format="value(networks.ipAddresses[0])")
+#helm install stable/nfs-client-provisioner --name nfs-cp --set nfs.server=${FSADDR} --set nfs.path=/volumes
