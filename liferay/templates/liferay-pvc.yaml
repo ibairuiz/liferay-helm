@@ -6,11 +6,12 @@ metadata:
     app.kubernetes.io/name: {{ include "liferay.name" . }}
     helm.sh/chart: {{ include "liferay.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}  
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "nfs"
 spec:
   accessModes:
     - ReadWriteMany
   resources:
     requests:
       storage: 8Gi
-  storageClassName: "standard"
